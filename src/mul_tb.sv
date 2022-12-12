@@ -1,4 +1,4 @@
-module fp8mul_tb;
+module jxli_fp8mul_tb;
 
   logic clock, reset, enable;
   logic [3:0] data;

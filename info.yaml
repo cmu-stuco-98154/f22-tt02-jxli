@@ -2,10 +2,9 @@
 # TinyTapeout project information
 project:
   wokwi_id:    0        # If using wokwi, set this to your project's ID
-#  source_files:        # If using an HDL, set wokwi_id as 0 and uncomment and list your source files here. Source files must be in ./src
-#    - counter.v
-#    - decoder.v
-#  top_module:  "seven_segment_seconds"      # put the name of your top module here, make it unique by prepending your github username
+ source_files:        # If using an HDL, set wokwi_id as 0 and uncomment and list your source files here. Source files must be in ./src
+   - mul.sv
+ top_module:  "jxli_fp8mul"      # put the name of your top module here, make it unique by prepending your github username
   
 # keep a track of the submission yaml
 yaml_version: 2.1
@@ -19,10 +18,10 @@ yaml_version: 2.1
 documentation: 
   author:       "Joseph Li"      # Your name
   discord:      ""      # Your discord handle - make sure to include the # part as well
-  title:        "FP8 E4M3 Multiplier"      # Project title
+  title:        "FP8(E4M3) Multiplier"      # Project title
   description:  "Multiply two 8-bit floating point numbers together (4-bit exponent, 3-bit mantissa)"      # Short description of what your project does
-  how_it_works: ""      # Longer description of how the project works
-  how_to_test:  ""      # Instructions on how someone could test your project, include things like what buttons do what and how to set the clock if needed
+  how_it_works: "Provide two 8-bit floating point numbers 4 bits at a time, use enable pin to provide these bits one set at a time. Wait a while and the product will appear on the output."      # Longer description of how the project works
+  how_to_test:  "See inputs and a provided testbench"      # Instructions on how someone could test your project, include things like what buttons do what and how to set the clock if needed
   external_hw:  ""      # Describe any external hardware needed
   language:     "SystemVerilog" # other examples include Verilog, Amaranth, VHDL, etc
   doc_link:     ""      # URL to longer form documentation, eg the README.md in your repository
@@ -38,12 +37,12 @@ documentation:
     - input1 (Exponent 3 / Mantissa 3)
     - none
   outputs:
-    - Sign Bit
-    - Exponent 1
-    - Exponent 2
-    - Exponent 3
-    - Exponent 4
-    - Mantissa 1
-    - Mantissa 2
     - Mantissa 3
+    - Mantissa 2
+    - Mantissa 1
+    - Exponent 4
+    - Exponent 3
+    - Exponent 2
+    - Exponent 1
+    - Sign Bit
 
