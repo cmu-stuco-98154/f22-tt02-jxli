@@ -42,6 +42,9 @@ module jxli_fp8mul (input [7:0] io_in, output [7:0] io_out);
   assign NaN = 7'b1111_111;
   assign infty = 7'b1111_000;
 
+  logic [7:0] product;
+  assign product = am * bm;
+
   always_ff @(posedge clock) begin
     case(state)
       AHIGH: begin
@@ -138,9 +141,7 @@ module jxli_fp8mul (input [7:0] io_in, output [7:0] io_out);
 
       // Perform computation, no rounding behavior
       CALC5: begin
-        logic [7:0] product;
         ce <= ae + be + 1;
-        assign product = am * bm;
         cm <= product[7:3];
         state <= CALC6;
       end
