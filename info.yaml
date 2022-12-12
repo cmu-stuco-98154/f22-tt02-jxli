@@ -1,6 +1,6 @@
 --- 
 # TinyTapeout project information
-project:
+project: 
   wokwi_id:    0        # If using wokwi, set this to your project's ID
  source_files:        # If using an HDL, set wokwi_id as 0 and uncomment and list your source files here. Source files must be in ./src
    - mul.sv
@@ -21,7 +21,7 @@ documentation:
   title:        "FP8(E4M3) Multiplier"      # Project title
   description:  "Multiply two 8-bit floating point numbers together (4-bit exponent, 3-bit mantissa)"      # Short description of what your project does
   how_it_works: "Provide two 8-bit floating point numbers 4 bits at a time, use enable pin to provide these bits one set at a time. Wait a while and the product will appear on the output."      # Longer description of how the project works
-  how_to_test:  "See inputs and a provided testbench"      # Instructions on how someone could test your project, include things like what buttons do what and how to set the clock if needed
+  how_to_test:  "See inputs and the example testbench in src/mul_tb.sv"      # Instructions on how someone could test your project, include things like what buttons do what and how to set the clock if needed
   external_hw:  ""      # Describe any external hardware needed
   language:     "SystemVerilog" # other examples include Verilog, Amaranth, VHDL, etc
   doc_link:     ""      # URL to longer form documentation, eg the README.md in your repository
