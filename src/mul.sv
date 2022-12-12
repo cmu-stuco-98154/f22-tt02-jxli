@@ -155,7 +155,7 @@ module jxli_fp8mul (input [7:0] io_in, output [7:0] io_out);
         end
       end
 
-      // Detect denormalized number
+      // Part 2
       CALC7: begin
         if ($signed(ce) < -6) begin
           ce <= ce + 1;
@@ -165,6 +165,9 @@ module jxli_fp8mul (input [7:0] io_in, output [7:0] io_out);
         end
       end
 
+      // Pack into output register, 
+      // Detect denormalized number
+      // Detect overflow
       CALC8: begin
         c[6:3] <= ce[3:0] + 7;
         c[2:0] <= cm[2:0];
