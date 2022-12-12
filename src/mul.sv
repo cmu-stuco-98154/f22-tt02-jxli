@@ -39,8 +39,8 @@ module jxli_fp8mul (input [7:0] io_in, output [7:0] io_out);
   assign aZero = ($signed(ae) == -7) && (am == 0);
   assign bZero = ($signed(be) == -7) && (bm == 0);
   logic [6:0] NaN, infty;
-  assign NaN = 7'b111_1111;
-  assign infty = 7'b111_0000;
+  assign NaN = 7'b1111_111;
+  assign infty = 7'b1111_000;
 
   always_ff @(posedge clock) begin
     case(state)
@@ -166,8 +166,8 @@ module jxli_fp8mul (input [7:0] io_in, output [7:0] io_out);
       end
 
       CALC8: begin
+        c[6:3] <= ce[3:0] + 7;
         c[2:0] <= cm[2:0];
-        c[6:3] <= ce[3:0];
         if ($signed(ce) == -6 && cm[3] == 0) begin
           c[6:3] <= 0;
         end
