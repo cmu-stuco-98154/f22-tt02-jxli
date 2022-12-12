@@ -19,8 +19,8 @@ yaml_version: 2.1
 documentation: 
   author:       "Joseph Li"      # Your name
   discord:      ""      # Your discord handle - make sure to include the # part as well
-  title:        "FP8 E3M4 Multiplier"      # Project title
-  description:  "Multiply two 8-bit floating point numbers together (3-bit exponent, 4-bit mantissa)"      # Short description of what your project does
+  title:        "FP8 E4M3 Multiplier"      # Project title
+  description:  "Multiply two 8-bit floating point numbers together (4-bit exponent, 3-bit mantissa)"      # Short description of what your project does
   how_it_works: ""      # Longer description of how the project works
   how_to_test:  ""      # Instructions on how someone could test your project, include things like what buttons do what and how to set the clock if needed
   external_hw:  ""      # Describe any external hardware needed
@@ -31,19 +31,19 @@ documentation:
   inputs:               # a description of what the inputs do
     - clock
     - reset
-    - input1 (Sign Bit / Mantissa 1)
-    - input1 (Exponent 1 / Mantissa 2)
-    - input1 (Exponent 2 / Mantissa 3)
-    - input1 (Exponent 3 / Mantissa 4)
-    - none
+    - enable
+    - input1 (Sign Bit / Exponent 4)
+    - input1 (Exponent 1 / Mantissa 1)
+    - input1 (Exponent 2 / Mantissa 2)
+    - input1 (Exponent 3 / Mantissa 3)
     - none
   outputs:
     - Sign Bit
     - Exponent 1
     - Exponent 2
     - Exponent 3
+    - Exponent 4
     - Mantissa 1
     - Mantissa 2
     - Mantissa 3
-    - Mantissa 4
 

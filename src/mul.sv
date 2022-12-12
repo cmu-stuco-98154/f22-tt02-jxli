@@ -1,15 +1,19 @@
-module jxli_fp8mul (
-  input [7:0] io_in,
-  output [7:0] io_out,
-);  
+module jxli_fp8mul (input [7:0] io_in, output [7:0] io_out);  
   // 7   6   5   4   3   2   1   0
   //###  DATA........... EN  RST CLK
 
-  enum logic [2:0] {
+  enum logic [3:0] {
     AHIGH, ALOW,
     BHIGH, BLOW,
-    CALC1,
-
+    CALC1, // load
+    CALC2, // special cases + denorm
+    CALC3,
+    CALC4,
+    CALC5,
+    CALC6,
+    CALC7,
+    CALC8,
+    FINISH
   } state;
 
   wire clock  = io_in[0];
@@ -25,93 +29,164 @@ module jxli_fp8mul (
 
   reg [7:0] a, b, c;
 
+  assign io_out = c;
+
+  logic aNaN, bNaN, aInfty, bInfty, aZero, bZero;
+  assign aNaN = ($signed(ae) == 8) && (am != 0);
+  assign bNaN = ($signed(be) == 8) && (bm != 0);
+  assign aInfty = ($signed(ae) == 8) && (am == 0);
+  assign bInfty = ($signed(be) == 8) && (bm == 0);
+  assign aZero = ($signed(ae) == -7) && (am == 0);
+  assign bZero = ($signed(be) == -7) && (bm == 0);
+  logic [6:0] NaN, infty;
+  assign NaN = 7'b111_1111;
+  assign infty = 7'b111_0000;
+
   always_ff @(posedge clock) begin
     case(state)
       AHIGH: begin
         if (enable) begin
-          a[7:4] <= data
-          state <= ALOW
+          a[7:4] <= data;
+          state <= ALOW;
         end
       end
 
       ALOW: begin
         if (enable) begin
-          a[3:0] <= data
-          state <= BHIGH
+          a[3:0] <= data;
+          state <= BHIGH;
         end
       end
 
       BHIGH: begin
         if (enable) begin
-          b[7:4] <= data
-          state <= BLOW
+          b[7:4] <= data;
+          state <= BLOW;
         end
       end
 
       BLOW: begin
         if (enable) begin
-        b[3:0] <= data
-        state <= BLOW
+        b[3:0] <= data;
+        state <= CALC1;
         end
       end
 
       CALC1: begin
-        ae <= a[6:3]
-        am <= a[]
+        ae <= {1'b0, a[6:3]} - 5'd7;
+        am <= {1'b0, a[2:0]};
+        be <= {1'b0, b[6:3]} - 5'd7;
+        bm <= {1'b0, b[2:0]};
+        c[7] <= a[7] ^ b[7];
+        state <= CALC2;
       end
 
       CALC2: begin
-
-        assign {as, ae, am} = a;
-        assign {bs, be, bm} = b;
-
-        c[7] <= as ^ bs;
-        
-        if (ae == 3'b111 && am != 3'b000) || (be == 3'b111 && bm != 3'b000) begin 
-          // a is NaN or b is NaN, c is NaN
-          c[6:0] <= 7'b111_1111
-        end else if (ae == 3'b111) begin 
+        // Process all cases where NaN, Inf, or ±0 appear in input
+        state <= FINISH;
+        if (aNaN || bNaN) begin 
+          c[6:0] <= NaN;
+        end else if (aInfty) begin 
           // a or b is infty, c is infty
-          if ({be, bm} == 7'b000_0000) begin
-            // b == 0, c = NaN
-            c[6:0] <= 7'b111_1111
-          end else begin
-            // b != 0, c = infty
-            c[6:0] <= 7'b111_0000
-          end
-        end else if (be == 3'b111) begin
-          if ({ae, am} == 7'b000_0000) begin
-            // a == 0, c = NaN
-            c[6:0] <= 7'b111_1111
-          end else begin
-            // a != 0, c = infty
-            c[6:0] <= 7'b111_0000
-          end
-        end else if ({ae, am} == 7'b000_0000 || {be, bm} == 7'b000_0000) begin
+          if (bZero)
+            c[6:0] <= NaN;
+          else
+            c[6:0] <= infty;
+        end else if (bInfty) begin
+          if (aZero) 
+            c[6:0] <= NaN;
+          else
+            c[6:0] <= infty;
+        end else if (aZero || bZero) begin
           // a == 0 or b == 0, c = 0
-          c[6:0] <= 7'b000_0000
-        end else {
+          c[6:0] <= 7'd0;
+        end else begin
           // denormalize numbers
-          if (ae == 3'b000) begin
-
+          state <= CALC3;
+          if ($signed(ae) == -7) begin
+            ae <= -7;
           end else begin
-
+            am[3] <= 1;
           end
-
-          if (be == 3'b000) begin
-
+          if ($signed(be) == -7) begin
+            be <= -7;
           end else begin
-
+            bm[3] <= 1;
           end
-        }
+        end
       end
 
+      // Align mantissa of a
+      CALC3: begin
+        if (am[3]) begin
+          state <= CALC4;
+        end else begin
+          am <= am << 1;
+          ae <= ae - 1;
+        end
+      end
+
+      // Align mantissa of b
+      CALC4: begin
+        if (bm[3]) begin
+          state <= CALC5;
+        end else begin
+          bm <= bm << 1;
+          be <= be - 1;
+        end
+      end
+
+      // Perform computation, no rounding behavior
+      CALC5: begin
+        logic [7:0] product;
+        ce <= ae + be + 1;
+        assign product = am * bm;
+        cm <= product[7:3];
+        state <= CALC6;
+      end
+
+      // Create normalized format
+      CALC6: begin
+        if (cm[3]) begin
+          state <= CALC7;
+        end else begin
+          cm <= cm << 1;
+          ce <= ce - 1;
+        end
+      end
+
+      // Detect denormalized number
+      CALC7: begin
+        if ($signed(ce) < -6) begin
+          ce <= ce + 1;
+          cm <= cm >> 1;
+        end else begin
+          state <= CALC8;
+        end
+      end
+
+      CALC8: begin
+        c[2:0] <= cm[2:0];
+        c[6:3] <= ce[3:0];
+        if ($signed(ce) == -6 && cm[3] == 0) begin
+          c[6:3] <= 0;
+        end
+
+        if ($signed(ce) > 7) begin
+          c[6:0] <= infty;
+        end
+
+        state <= FINISH;
+      end
+
+      FINISH: begin
+      end
       
     endcase
 
     if(reset) begin
-      state <= AHIGH
-      c <= 8'b1111_1111
+      state <= AHIGH;
+      c <= 8'b1111_1111;
     end
     
   end
